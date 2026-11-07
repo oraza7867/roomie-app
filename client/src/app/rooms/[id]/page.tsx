@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
+import { CAMPUS } from '@/lib/campus';
 
-export default function RoomDetailPage() {
+function RoomDetailContent() {
   const { id } = useParams();
   const router = useRouter();
   const { user } = useAuth();
@@ -64,7 +65,12 @@ export default function RoomDetailPage() {
             </span>
           </div>
           <h1 className="text-3xl font-bold tracking-tight text-gray-900">{room.title}</h1>
-          <p className="text-gray-500 mt-1">{room.city} • {room.area}</p>
+          <p className="text-gray-500 mt-1">{room.locality || room.city} • {room.area}</p>
+          {room.distanceFromCampusKm !== undefined && (
+            <p className="text-sm font-semibold text-orange-700 mt-1">
+              📍 {room.distanceFromCampusKm} km from {CAMPUS.name} ({CAMPUS.short})
+            </p>
+          )}
         </div>
 
         {isOwner && (
@@ -105,6 +111,12 @@ export default function RoomDetailPage() {
                 <span className="block text-sm text-gray-500">Preferred Gender</span>
                 <span className="font-medium text-gray-900">{room.preferredGender}</span>
               </div>
+              <div>
+                <span className="block text-sm text-gray-500">Campus Proximity</span>
+                <span className="font-medium text-gray-900">
+                  {room.distanceFromCampusKm !== undefined ? `${room.distanceFromCampusKm} km` : 'Near Campus'}
+                </span>
+              </div>
             </div>
           </div>
           {/* Interactive Map Section */}
@@ -113,7 +125,7 @@ export default function RoomDetailPage() {
               <span>🗺 Neighborhood & Campus Location</span>
             </h2>
             <p className="text-sm text-gray-500">
-              Located near <span className="font-semibold text-gray-900">{room.area}, {room.city}</span>.
+              Located at <span className="font-semibold text-gray-900">{room.area}, {room.locality || room.city}</span> near {CAMPUS.name}.
             </p>
             <div className="w-full h-64 rounded-xl overflow-hidden border border-gray-200 shadow-inner">
               <iframe
@@ -122,7 +134,7 @@ export default function RoomDetailPage() {
                 height="100%"
                 frameBorder="0"
                 scrolling="no"
-                src={`https://maps.google.com/maps?q=${encodeURIComponent(room.area + ', ' + room.city + ', India')}&t=&z=14&ie=UTF8&iwloc=&output=embed`}
+                src={`https://maps.google.com/maps?q=${room.lat && room.lng ? `${room.lat},${room.lng}` : encodeURIComponent((room.area || '') + ', ' + (room.locality || '') + ', ' + CAMPUS.name)}&t=&z=15&ie=UTF8&iwloc=&output=embed`}
                 className="w-full h-full"
               ></iframe>
             </div>
@@ -162,5 +174,13 @@ export default function RoomDetailPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function RoomDetailPage() {
+  return (
+    <Suspense fallback={<div className="p-20 text-center text-gray-500">Loading room details...</div>}>
+      <RoomDetailContent />
+    </Suspense>
   );
 }

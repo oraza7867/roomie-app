@@ -11,6 +11,11 @@ datasource db {
 // ENUMS
 // -----------------------------------------------------------------------------
 
+enum LookingFor {
+  ROOM_AND_ROOMMATE
+  ROOMMATE_ONLY
+}
+
 enum RequestStatus {
   PENDING
   ACCEPTED
@@ -48,12 +53,17 @@ model User {
   role      Role     @default(USER)
   
   // Profile fields (optional initially)
-  age       Int?
-  college   String?
-  course    String?
-  year      String?
-  city      String?
-  bio       String?
+  age               Int?
+  college           String?  @default("Integral University")
+  course            String?
+  year              String?
+  city              String?
+  hostelOrLocality  String?
+  bio               String?
+  
+  // Roommate search & vibe
+  lookingFor LookingFor @default(ROOM_AND_ROOMMATE)
+  vibeAnswers Json?
   
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -121,8 +131,11 @@ model RoomListing {
   
   title           String
   description     String
-  city            String
+  locality        String
   area            String
+  lat             Float
+  lng             Float
+  distanceFromCampusKm Float
   monthlyRent     Int
   deposit         Int
   availableFrom   DateTime
@@ -136,6 +149,8 @@ model RoomListing {
   
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
+
+  @@index([locality, monthlyRent])
 }
 
 model RoomieRequest {

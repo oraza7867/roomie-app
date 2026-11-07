@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { apiFetch } from '@/lib/api';
+import { getMyProfile, updateMyProfile, getUserReviews } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
+import { CAMPUS, COURSES, HOSTELS, LOCALITIES } from '@/lib/campus';
 import Link from 'next/link';
 
 export default function ProfilePage() {
@@ -18,8 +19,8 @@ export default function ProfilePage() {
     const fetchProfile = async () => {
       try {
         const [profData, revData] = await Promise.all([
-          apiFetch('/profile/me'),
-          apiFetch(`/users/${user?.id}/reviews`) // assuming this route is public or accessible
+          getMyProfile(),
+          user?.id ? getUserReviews(user.id) : Promise.resolve({ reviews: [], averageRating: 0 })
         ]);
         setProfile(profData.profile);
         setFormData(profData.profile);
@@ -34,20 +35,33 @@ export default function ProfilePage() {
     if (user?.id) fetchProfile();
   }, [user]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleSelectLookingFor = async (val: 'ROOM_AND_ROOMMATE' | 'ROOMMATE_ONLY') => {
+    if (isEditing) {
+      setFormData({ ...formData, lookingFor: val });
+    } else {
+      try {
+        const res = await updateMyProfile({ lookingFor: val });
+        setProfile(res.profile);
+        setFormData(res.profile);
+      } catch (err: any) {
+        alert(err.message || 'Failed to update status');
+      }
+    }
   };
 
   const handleSave = async () => {
     try {
+      const { id, email, college, createdAt, updatedAt, ...rest } = formData;
       const payload = {
-        ...formData,
+        ...rest,
         age: formData.age ? parseInt(formData.age) : undefined,
+        lookingFor: formData.lookingFor || 'ROOM_AND_ROOMMATE',
       };
-      const res = await apiFetch('/profile/me', {
-        method: 'PATCH',
-        body: JSON.stringify(payload)
-      });
+      const res = await updateMyProfile(payload);
       setProfile(res.profile);
       setIsEditing(false);
     } catch (err: any) {
@@ -74,6 +88,75 @@ export default function ProfilePage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         {/* Left Column: Form / Info */}
         <div className="md:col-span-2 space-y-6 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+          {/* 2-Card Selector for LookingFor */}
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <label className="block text-sm font-semibold text-gray-700">
+                What are you looking for?
+              </label>
+              <span className="text-xs text-gray-400">
+                {isEditing ? 'Click card to select' : 'Tap to switch anytime'}
+              </span>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {/* Card 1 */}
+              <button
+                type="button"
+                onClick={() => handleSelectLookingFor('ROOM_AND_ROOMMATE')}
+                className={`text-left p-4 rounded-xl border-2 transition-all relative flex flex-col justify-between ${
+                  (isEditing ? formData.lookingFor : profile?.lookingFor) === 'ROOM_AND_ROOMMATE'
+                    ? 'border-orange-500 bg-orange-50/70 shadow-sm ring-1 ring-orange-500/20'
+                    : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50/50'
+                }`}
+              >
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-2xl">🏠</span>
+                    {(isEditing ? formData.lookingFor : profile?.lookingFor) === 'ROOM_AND_ROOMMATE' && (
+                      <span className="inline-flex items-center rounded-full bg-orange-600 text-white px-2 py-0.5 text-xs font-semibold">
+                        Selected
+                      </span>
+                    )}
+                  </div>
+                  <h4 className="font-bold text-gray-900 text-sm">
+                    I need a room + roommate
+                  </h4>
+                  <p className="text-xs text-gray-500 mt-1 leading-relaxed">
+                    Looking for accommodation near campus and peers to share it with.
+                  </p>
+                </div>
+              </button>
+
+              {/* Card 2 */}
+              <button
+                type="button"
+                onClick={() => handleSelectLookingFor('ROOMMATE_ONLY')}
+                className={`text-left p-4 rounded-xl border-2 transition-all relative flex flex-col justify-between ${
+                  (isEditing ? formData.lookingFor : profile?.lookingFor) === 'ROOMMATE_ONLY'
+                    ? 'border-orange-500 bg-orange-50/70 shadow-sm ring-1 ring-orange-500/20'
+                    : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50/50'
+                }`}
+              >
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-2xl">🔑</span>
+                    {(isEditing ? formData.lookingFor : profile?.lookingFor) === 'ROOMMATE_ONLY' && (
+                      <span className="inline-flex items-center rounded-full bg-orange-600 text-white px-2 py-0.5 text-xs font-semibold">
+                        Selected
+                      </span>
+                    )}
+                  </div>
+                  <h4 className="font-bold text-gray-900 text-sm">
+                    I have a room, need a roommate
+                  </h4>
+                  <p className="text-xs text-gray-500 mt-1 leading-relaxed">
+                    Already have a room or flat near campus, looking for a roommate to move in.
+                  </p>
+                </div>
+              </button>
+            </div>
+          </div>
+
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-500">Name</label>
@@ -87,23 +170,64 @@ export default function ProfilePage() {
           
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-500">College</label>
-              {isEditing ? <input name="college" value={formData.college || ''} onChange={handleChange} className="mt-1 block w-full rounded border-gray-300 ring-1 ring-gray-300 py-1.5 px-3" /> : <p className="text-gray-900">{profile?.college}</p>}
+              <label className="block text-sm font-medium text-gray-500">Campus</label>
+              <div className="mt-1 block w-full rounded border border-gray-200 bg-gray-50 py-1.5 px-3 text-sm text-gray-800 font-medium">
+                {CAMPUS.name} ({CAMPUS.short})
+              </div>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-500">Course & Year</label>
               {isEditing ? (
                 <div className="flex gap-2">
-                  <input name="course" placeholder="Course" value={formData.course || ''} onChange={handleChange} className="mt-1 block w-full rounded border-gray-300 ring-1 ring-gray-300 py-1.5 px-3" />
-                  <input name="year" placeholder="Year" value={formData.year || ''} onChange={handleChange} className="mt-1 block w-full rounded border-gray-300 ring-1 ring-gray-300 py-1.5 px-3" />
+                  <select
+                    name="course"
+                    value={formData.course || ''}
+                    onChange={handleChange}
+                    className="mt-1 block w-full rounded border-gray-300 ring-1 ring-gray-300 py-1.5 px-3 text-sm bg-white"
+                  >
+                    <option value="">Select course</option>
+                    {COURSES.map((c) => (
+                      <option key={c} value={c}>
+                        {c}
+                      </option>
+                    ))}
+                  </select>
+                  <input name="year" placeholder="Year (e.g. 2nd)" value={formData.year || ''} onChange={handleChange} className="mt-1 block w-28 rounded border-gray-300 ring-1 ring-gray-300 py-1.5 px-3 text-sm" />
                 </div>
-              ) : <p className="text-gray-900">{profile?.course} {profile?.year && `• ${profile.year}`}</p>}
+              ) : <p className="text-gray-900">{profile?.course || 'No course set'} {profile?.year && `• ${profile.year}`}</p>}
             </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-500">City</label>
-            {isEditing ? <input name="city" value={formData.city || ''} onChange={handleChange} className="mt-1 block w-full rounded border-gray-300 ring-1 ring-gray-300 py-1.5 px-3" /> : <p className="text-gray-900">{profile?.city || 'Not set'}</p>}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-500">Hostel / Locality</label>
+              {isEditing ? (
+                <div>
+                  <input
+                    name="hostelOrLocality"
+                    list="hostel-locality-list"
+                    placeholder="e.g. Hall 1, Dasauli, Kursi Road"
+                    value={formData.hostelOrLocality || ''}
+                    onChange={handleChange}
+                    className="mt-1 block w-full rounded border-gray-300 ring-1 ring-gray-300 py-1.5 px-3 text-sm"
+                  />
+                  <datalist id="hostel-locality-list">
+                    {HOSTELS.map((h) => (
+                      <option key={h} value={h} />
+                    ))}
+                    {LOCALITIES.map((l) => (
+                      <option key={l} value={l} />
+                    ))}
+                  </datalist>
+                </div>
+              ) : (
+                <p className="text-gray-900">{profile?.hostelOrLocality || 'Not set'}</p>
+              )}
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-500">City</label>
+              {isEditing ? <input name="city" value={formData.city || ''} onChange={handleChange} className="mt-1 block w-full rounded border-gray-300 ring-1 ring-gray-300 py-1.5 px-3 text-sm" /> : <p className="text-gray-900">{profile?.city || 'Lucknow'}</p>}
+            </div>
           </div>
 
           <div>

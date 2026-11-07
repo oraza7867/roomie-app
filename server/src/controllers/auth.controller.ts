@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken';
 import { prisma } from '../lib/prisma';
 import { registerSchema, loginSchema } from '../validators/auth.validator';
 import { AuthRequest } from '../middleware/auth.middleware';
+import { CAMPUS } from '../config/campus';
 
 // Generate token helper
 const generateToken = (userId: string) => {
@@ -42,10 +43,11 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(validatedData.password, salt);
 
-    // 4. Create user
+    // 4. Create user (college fixed to campus)
     const newUser = await prisma.user.create({
       data: {
         ...validatedData,
+        college: CAMPUS.name,
         password: hashedPassword,
       }
     });

@@ -2,234 +2,259 @@
 
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
+import { CAMPUS, LOCALITIES } from '@/lib/campus';
+import { ArrowRight, Check, MapPin, Users, Home as HomeIcon } from 'lucide-react';
 
 export default function Home() {
   const { user } = useAuth();
 
   return (
-    <div className="bg-white min-h-screen">
+    <div className="bg-[#faf8f5] text-[#1c1917]">
 
-      {/* ── HERO ── */}
-      <section className="mx-auto max-w-6xl px-6 pt-16 pb-20 sm:pt-24 sm:pb-28">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-14 items-center">
+      {/* ── HERO (Left-aligned, asymmetrical, honest copy) ── */}
+      <section className="mx-auto max-w-6xl px-4 sm:px-6 pt-12 pb-16 sm:pt-20 sm:pb-24 border-b border-[#e7e5df]">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+          
+          <div className="lg:col-span-7">
+            {/*<div className="inline-flex items-center gap-2 border border-[#e7e5df] bg-[#ffffff] px-2.5 py-1 rounded-md text-xs font-mono text-[#57534e] mb-6">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#b4431e]"></span>
+              Built for {CAMPUS.name} ({CAMPUS.short}) students
+            </div>*/}
 
-          <div>
-            <p className="text-sm font-medium text-orange-600 mb-4">
-              For students in Lucknow
-            </p>
-
-            <h1 className="text-4xl sm:text-5xl font-extrabold text-gray-900 leading-tight tracking-tight">
-              Roommates, not randoms.
+            <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-[#1c1917] leading-[1.15]">
+              Find a roommate near campus who won&apos;t drive you crazy.
             </h1>
 
-            <p className="mt-5 text-gray-600 text-lg leading-relaxed max-w-lg">
-              Sharing rent is easy. Living together is hard. We match you with
-              people based on sleep timing, cleanliness, noise — the things
-              that actually start fights between flatmates.
+            <p className="mt-5 text-[#57534e] text-base sm:text-lg leading-relaxed max-w-xl">
+              Moving out of Hall 1–5 or hunting for a flat on Kursi Road? 
+              Don&apos;t gamble on random WhatsApp groups. We match you on when you sleep, 
+              how often you clean, and whether you mind guests before you sign a 11-month lease.
             </p>
 
-            <div className="mt-8 flex items-center gap-4">
+            <div className="mt-8 flex flex-wrap items-center gap-4">
               <Link
                 href={user ? "/discover" : "/register"}
-                className="bg-orange-600 text-white px-6 py-3 rounded-lg text-sm font-semibold hover:bg-orange-500 transition-colors shadow-sm"
+                className="inline-flex items-center gap-2 bg-[#b4431e] hover:bg-[#963515] text-white px-5 py-2.5 rounded-md text-sm font-medium transition-colors border border-[#b4431e]"
               >
-                {user ? 'Find roomies' : 'Sign up free'}
+                {user ? 'Find Roommates' : 'Sign Up Free'}
+                <ArrowRight className="w-4 h-4" />
               </Link>
               <Link
                 href="/rooms"
-                className="text-sm font-semibold text-gray-700 hover:text-orange-600 transition-colors"
+                className="inline-flex items-center gap-2 text-sm font-medium text-[#1c1917] hover:text-[#b4431e] px-4 py-2.5 rounded-md border border-[#e7e5df] bg-[#ffffff] hover:border-[#d3cfc7] transition-colors"
               >
-                Browse rooms →
+                <MapPin className="w-3.5 h-3.5 text-[#78716c]" />
+                Browse Rooms Near Campus
+              </Link>
+            </div>
+
+            <div className="mt-8 pt-6 border-t border-[#e7e5df] flex items-center gap-6 text-xs text-[#78716c]">
+              <span>Zero broker spam</span>
+              <span>•</span>
+              <span>Only verified university emails</span>
+              <span>•</span>
+              <span>Free for students</span>
+            </div>
+          </div>
+
+          {/* Student Hero Showcase */}
+          <div className="lg:col-span-5">
+            <div className="relative rounded-xl overflow-hidden border border-[#e7e5df] shadow-md bg-white group">
+              <img
+                src="/student_room_hero.jpg"
+                alt="Student flat and study space"
+                className="w-full h-80 sm:h-96 object-cover object-center group-hover:scale-105 transition-transform duration-700"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent flex flex-col justify-end p-6">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="inline-block px-2.5 py-1 rounded text-[11px] font-mono font-medium bg-[#b4431e] text-white uppercase tracking-wider">
+                    Verified Campus Housing
+                  </span>
+                  <span className="text-[11px] font-mono text-white/80 bg-white/20 backdrop-blur-sm px-2 py-0.5 rounded">
+                    Kursi Road &amp; Dasauli
+                  </span>
+                </div>
+                <h3 className="text-white text-lg font-bold leading-snug">
+                  Affordable rooms &amp; compatible flatmates around Integral University
+                </h3>
+                <div className="mt-3 pt-3 border-t border-white/20 grid grid-cols-2 gap-2 text-xs text-white/90">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-emerald-400 font-bold">✓</span>
+                    <span>No broker fees</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-emerald-400 font-bold">✓</span>
+                    <span>Student-only network</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      {/* ── THE TELEGRAM PROBLEM ── */}
+      <section className="mx-auto max-w-6xl px-4 sm:px-6 py-16 sm:py-20 border-b border-[#e7e5df]">
+        <div className="max-w-2xl">
+          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#1c1917]">
+            Why campus WhatsApp groups don&apos;t cut it.
+          </h2>
+          <p className="mt-3 text-sm sm:text-base text-[#57534e] leading-relaxed">
+            Every semester someone posts: &quot;Need 1 flatmate near Kursi Road, non-smoker, vegetarian preferred, rent 4000.&quot;
+            That tells you nothing about what day-to-day life will be like.
+          </p>
+        </div>
+
+        <div className="mt-10 grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="bg-[#ffffff] border border-[#e7e5df] p-5 rounded-md">
+            <div className="text-xs font-mono uppercase text-[#b4431e] font-semibold mb-2">01 / Sleep Schedules</div>
+            <h3 className="font-bold text-base text-[#1c1917] mb-2">Lights-out clashes</h3>
+            <p className="text-xs text-[#57534e] leading-relaxed">
+              If you have 9 AM labs in Block 2 and your flatmate plays games with Discord open until 4 AM, your semester is ruined. We check this first.
+            </p>
+          </div>
+
+          <div className="bg-[#ffffff] border border-[#e7e5df] p-5 rounded-md">
+            <div className="text-xs font-mono uppercase text-[#b4431e] font-semibold mb-2">02 / Kitchen &amp; Cleanliness</div>
+            <h3 className="font-bold text-base text-[#1c1917] mb-2">The dishes standoff</h3>
+            <p className="text-xs text-[#57534e] leading-relaxed">
+              Some people wash their tea cups immediately. Others leave Maggi bowls in the sink until Thursday. Find someone on your wavelength.
+            </p>
+          </div>
+
+          <div className="bg-[#ffffff] border border-[#e7e5df] p-5 rounded-md">
+            <div className="text-xs font-mono uppercase text-[#b4431e] font-semibold mb-2">03 / Visitors &amp; Guests</div>
+            <h3 className="font-bold text-base text-[#1c1917] mb-2">Hostel vs Flat culture</h3>
+            <p className="text-xs text-[#57534e] leading-relaxed">
+              Some want the flat to be a social hub where friends chill till late. Others treat it as a quiet retreat. Know what you&apos;re signing up for.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* ── HOW IT WORKS ── */}
+      <section className="mx-auto max-w-6xl px-4 sm:px-6 py-16 sm:py-20 border-b border-[#e7e5df]">
+        <div className="max-w-2xl mb-10">
+          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#1c1917]">
+            How this works
+          </h2>
+          <p className="mt-2 text-sm text-[#57534e]">
+            Three simple steps: answer key lifestyle questions, get algorithmic compatibility scores, and connect.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="border-t border-[#e7e5df] pt-4">
+            <div className="text-xs font-mono text-[#78716c] mb-1">Step 1</div>
+            <h3 className="font-bold text-base text-[#1c1917] mb-1">Answer 6 lifestyle questions</h3>
+            <p className="text-xs text-[#57534e] leading-relaxed">
+              Takes 2 minutes. When you sleep, cleanliness, guests, noise level, and whether you smoke.
+            </p>
+          </div>
+
+          <div className="border-t border-[#e7e5df] pt-4">
+            <div className="text-xs font-mono text-[#78716c] mb-1">Step 2</div>
+            <h3 className="font-bold text-base text-[#1c1917] mb-1">Review matches with breakdown</h3>
+            <p className="text-xs text-[#57534e] leading-relaxed">
+              See peers filtered by whether they already have a flat or need one, plus exact points where your routines line up.
+            </p>
+          </div>
+
+          <div className="border-t border-[#e7e5df] pt-4">
+            <div className="text-xs font-mono text-[#78716c] mb-1">Step 3</div>
+            <h3 className="font-bold text-base text-[#1c1917] mb-1">Connect and chat safely</h3>
+            <p className="text-xs text-[#57534e] leading-relaxed">
+              Send a request. Once accepted, chat in-app to meet at Central Canteen or Gate 1 before making any deposit.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* ── LOCALITIES COVERED ── */}
+      <section className="mx-auto max-w-6xl px-4 sm:px-6 py-16 sm:py-20 border-b border-[#e7e5df]">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6 mb-8">
+          <div>
+            <h2 className="text-2xl font-bold tracking-tight text-[#1c1917]">
+              Rooms and flats around campus
+            </h2>
+            <p className="mt-1 text-sm text-[#57534e]">
+              Filtered by actual distance from Integral University gates.
+            </p>
+          </div>
+          <Link
+            href="/rooms"
+            className="text-xs font-medium text-[#b4431e] hover:underline"
+          >
+            View all listings &rarr;
+          </Link>
+        </div>
+
+        <div className="flex flex-wrap gap-2">
+          {LOCALITIES.map((area) => (
+            <Link
+              key={area}
+              href={`/rooms?locality=${encodeURIComponent(area)}`}
+              className="text-xs bg-[#ffffff] border border-[#e7e5df] hover:border-[#b4431e] text-[#57534e] hover:text-[#1c1917] px-3 py-1.5 rounded-md transition-colors"
+            >
+              {area}
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      {/* ── SIMPLE BOTTOM CALLOUT WITH COMMUNITY IMAGE ── */}
+      <section className="mx-auto max-w-6xl px-4 sm:px-6 py-16 sm:py-20">
+        <div className="bg-[#ffffff] border border-[#e7e5df] rounded-lg overflow-hidden shadow-sm grid grid-cols-1 lg:grid-cols-12 items-center">
+          <div className="p-8 sm:p-12 lg:col-span-7">
+            <span className="inline-block px-2.5 py-1 rounded text-xs font-mono font-medium bg-[#fbf2ec] text-[#b4431e] border border-[#f5ded0] mb-4">
+              Join the student community
+            </span>
+            <h2 className="text-2xl sm:text-3xl font-bold text-[#1c1917] tracking-tight">
+              Moving out next semester?
+            </h2>
+            <p className="mt-3 text-sm text-[#57534e] leading-relaxed max-w-lg">
+              Create your lifestyle profile in 2 minutes. Free forever for {CAMPUS.name} students.
+              Connect directly with verified students and skip broker commissions entirely.
+            </p>
+            <div className="mt-6 flex flex-wrap items-center gap-4">
+              <Link
+                href={user ? "/discover" : "/register"}
+                className="bg-[#b4431e] hover:bg-[#963515] text-white px-5 py-2.5 rounded-md text-sm font-medium transition-colors border border-[#b4431e]"
+              >
+                {user ? 'Browse Matches' : 'Get Started'}
+              </Link>
+              <Link
+                href="/rooms"
+                className="text-sm font-medium text-[#57534e] hover:text-[#1c1917] px-4 py-2.5 rounded-md border border-[#e7e5df] bg-[#faf8f5] hover:bg-white transition-colors"
+              >
+                Check Available Rooms
               </Link>
             </div>
           </div>
-
-          <div className="rounded-2xl overflow-hidden border border-gray-200 shadow-md aspect-[4/3]">
+          <div className="lg:col-span-5 h-64 lg:h-full relative min-h-[260px]">
             <img
-              src="/student_room_hero.jpg"
-              alt="Student shared living space"
-              className="w-full h-full object-cover"
+              src="/students_community.jpg"
+              alt="Students enjoying community life together"
+              className="absolute inset-0 w-full h-full object-cover object-center"
             />
-          </div>
-
-        </div>
-      </section>
-
-      {/* ── WHAT IT DOES (simple, no fluff) ── */}
-      <section className="border-t border-gray-100 bg-gray-50">
-        <div className="mx-auto max-w-6xl px-6 py-20 sm:py-24">
-          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-12">
-            How it works
-          </h2>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
-
-            <div>
-              <div className="w-9 h-9 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center text-sm font-bold mb-4">
-                1
-              </div>
-              <h3 className="font-semibold text-gray-900 text-lg">Fill out your habits</h3>
-              <p className="mt-2 text-sm text-gray-600 leading-relaxed">
-                When do you sleep? How clean are you? Do you mind guests? 
-                Takes about 2 minutes.
-              </p>
-            </div>
-
-            <div>
-              <div className="w-9 h-9 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center text-sm font-bold mb-4">
-                2
-              </div>
-              <h3 className="font-semibold text-gray-900 text-lg">Browse your matches</h3>
-              <p className="mt-2 text-sm text-gray-600 leading-relaxed">
-                We show you people whose daily routine actually lines up with yours.
-                Each card tells you exactly what you agree on and where you differ.
-              </p>
-            </div>
-
-            <div>
-              <div className="w-9 h-9 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center text-sm font-bold mb-4">
-                3
-              </div>
-              <h3 className="font-semibold text-gray-900 text-lg">Send a request, start chatting</h3>
-              <p className="mt-2 text-sm text-gray-600 leading-relaxed">
-                Liked someone? Send them a request. Once they accept, you 
-                can chat in-app and figure out the rest.
-              </p>
-            </div>
-
-          </div>
-        </div>
-      </section>
-
-      {/* ── WHY NOT JUST USE TELEGRAM / OLX ── */}
-      <section className="border-t border-gray-100">
-        <div className="mx-auto max-w-6xl px-6 py-20 sm:py-24">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-14 items-center">
-
-            <div className="rounded-2xl overflow-hidden border border-gray-200 shadow-md aspect-[4/3]">
-              <img
-                src="/students_community.jpg"
-                alt="College students in common area"
-                className="w-full h-full object-cover"
-              />
-            </div>
-
-            <div>
-              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">
-                Telegram groups tell you nothing useful.
-              </h2>
-              <p className="mt-4 text-gray-600 leading-relaxed">
-                "Looking for flatmate near Gomti Nagar, male, non-smoker" — that's 
-                what every post looks like. But none of that tells you if someone 
-                sleeps at 10pm or 3am, or if they'll leave dishes in the sink for 
-                three days.
-              </p>
-              <p className="mt-4 text-gray-600 leading-relaxed">
-                ROOMIE compares <span className="font-medium text-gray-900">sleep schedules, 
-                cleanliness, noise tolerance, study habits, guest preferences</span> and 
-                more — so you know what living with someone will actually be like 
-                before you commit.
-              </p>
-
-              <div className="mt-8 flex flex-wrap gap-2">
-                {['Hazratganj', 'Gomti Nagar', 'Jankipuram', 'Aliganj', 'Indira Nagar', 'Chinhat', 'Rajajipuram', 'Mahanagar'].map((area) => (
-                  <span
-                    key={area}
-                    className="bg-gray-100 border border-gray-200 text-gray-700 text-xs font-medium px-3 py-1.5 rounded-full"
-                  >
-                    {area}
-                  </span>
-                ))}
-              </div>
-            </div>
-
-          </div>
-        </div>
-      </section>
-
-      {/* ── FEATURES (compact, no emoji icons) ── */}
-      <section className="border-t border-gray-100 bg-gray-50">
-        <div className="mx-auto max-w-6xl px-6 py-20 sm:py-24">
-          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">
-            What you get
-          </h2>
-          <p className="text-gray-600 mb-12 max-w-xl">
-            Everything you need to find the right person — nothing you don't.
-          </p>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[
-              {
-                title: 'Compatibility scores',
-                desc: 'Every match gets a percentage based on how closely your daily habits line up. Plus a clear breakdown of what matched and what didn\'t.',
-              },
-              {
-                title: 'Locality filters',
-                desc: 'Search by Lucknow areas — Gomti Nagar, Hazratganj, Jankipuram, wherever your college is. Only see people relevant to you.',
-              },
-              {
-                title: 'In-app messaging',
-                desc: 'Chat directly inside the app. No need to share your number with someone you haven\'t even met yet.',
-              },
-              {
-                title: 'Room listings',
-                desc: 'Already have a flat? Post it. Looking for one? Browse available rooms with rent, deposit, and furnishing details.',
-              },
-              {
-                title: 'Student profiles',
-                desc: 'Every profile shows college, course, year, and bio. You\'re not talking to a blank name on a classifieds page.',
-              },
-              {
-                title: 'Request system',
-                desc: 'Send a request, wait for them to accept. No spam, no random messages. Both sides have to say yes.',
-              },
-            ].map((f) => (
-              <div
-                key={f.title}
-                className="bg-white rounded-xl border border-gray-200 p-6 hover:border-gray-300 transition-colors"
-              >
-                <h3 className="font-semibold text-gray-900">{f.title}</h3>
-                <p className="mt-2 text-sm text-gray-600 leading-relaxed">{f.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── BOTTOM CTA ── */}
-      <section className="border-t border-gray-100">
-        <div className="mx-auto max-w-3xl px-6 py-20 sm:py-24 text-center">
-          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">
-            Find someone you can actually live with.
-          </h2>
-          <p className="mt-4 text-gray-600 max-w-md mx-auto">
-            Takes 2 minutes to set up. Free forever. Built for Lucknow students.
-          </p>
-          <div className="mt-8 flex justify-center gap-4">
-            <Link
-              href={user ? "/discover" : "/register"}
-              className="bg-orange-600 text-white px-6 py-3 rounded-lg text-sm font-semibold hover:bg-orange-500 transition-colors shadow-sm"
-            >
-              {user ? 'Find roomies' : 'Get started'}
-            </Link>
-            <Link
-              href="/discover"
-              className="border border-gray-300 text-gray-700 px-6 py-3 rounded-lg text-sm font-semibold hover:bg-gray-50 transition-colors"
-            >
-              See how matching works
-            </Link>
+            <div className="absolute inset-0 bg-gradient-to-t lg:bg-gradient-to-r from-black/40 via-transparent to-transparent" />
           </div>
         </div>
       </section>
 
       {/* ── FOOTER ── */}
-      <footer className="border-t border-gray-200 bg-white">
-        <div className="mx-auto max-w-6xl px-6 py-8 flex flex-col sm:flex-row justify-between items-center gap-3 text-sm text-gray-500">
-          <span className="font-bold text-gray-900">ROOMIE</span>
-          <span>Built for students, by students · Lucknow</span>
+      <footer className="border-t border-[#e7e5df] bg-[#faf8f5] py-8 text-xs text-[#78716c]">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 flex flex-col sm:flex-row justify-between items-center gap-4">
+          <div className="flex items-center gap-2">
+            <span className="font-bold text-[#1c1917] font-display">roomie.</span>
+            <span>· Made by students at {CAMPUS.name} ({CAMPUS.short})</span>
+          </div>
+          <div>Kursi Road, Lucknow · Non-commercial campus project</div>
         </div>
       </footer>
 
     </div>
   );
 }
+

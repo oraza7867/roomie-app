@@ -1,60 +1,64 @@
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcrypt';
+import { CAMPUS } from '../src/config/campus';
 
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log('🌱 Seeding sample student data into database...');
+  console.log('🌱 Seeding sample student data into database for ' + CAMPUS.name + '...');
 
   // Hash password
   const hashedPassword = await bcrypt.hash('password123', 10);
 
-  // 1. Create Sample Users
+  // 1. Create Sample Users (All Integral University students)
   const user1 = await prisma.user.upsert({
-    where: { email: 'aarav@delhi.edu' },
+    where: { email: 'aarav@iul.ac.in' },
     update: {},
     create: {
       name: 'Aarav Sharma',
-      email: 'aarav@delhi.edu',
+      email: 'aarav@iul.ac.in',
       password: hashedPassword,
       age: 21,
-      college: 'Delhi University (North Campus)',
-      course: 'Computer Science',
+      college: CAMPUS.name,
+      course: 'B.Tech',
       year: '3rd year',
-      city: 'Delhi',
-      bio: 'Quiet at night, pretty clean, and usually studying after dinner.',
+      city: 'Lucknow',
+      hostelOrLocality: 'Dasauli / Kursi Road',
+      bio: 'B.Tech student at IUL. Quiet at night, pretty clean, studying after dinner.',
     }
   });
 
   const user2 = await prisma.user.upsert({
-    where: { email: 'ananya@pune.edu' },
+    where: { email: 'ananya@iul.ac.in' },
     update: {},
     create: {
       name: 'Ananya Verma',
-      email: 'ananya@pune.edu',
+      email: 'ananya@iul.ac.in',
       password: hashedPassword,
       age: 20,
-      college: 'Symbiosis Pune',
-      course: 'Design & Media',
+      college: CAMPUS.name,
+      course: 'B.Pharm',
       year: '2nd year',
-      city: 'Pune',
-      bio: 'Early riser, loves tea, keeps the common area tidy.',
+      city: 'Lucknow',
+      hostelOrLocality: 'Hall 4 (Girls Hostel)',
+      bio: 'Pharmacy student. Early riser, loves chai, keeps room tidy.',
     }
   });
 
   const user3 = await prisma.user.upsert({
-    where: { email: 'rohan@mumbai.edu' },
+    where: { email: 'rohan@iul.ac.in' },
     update: {},
     create: {
       name: 'Rohan Gupta',
-      email: 'rohan@mumbai.edu',
+      email: 'rohan@iul.ac.in',
       password: hashedPassword,
       age: 22,
-      college: 'IIT Bombay',
-      course: 'Electrical Eng',
-      year: '4th year',
-      city: 'Mumbai',
-      bio: 'Night owl coding DSA, respectful of boundaries.',
+      college: CAMPUS.name,
+      course: 'BCA',
+      year: '3rd year',
+      city: 'Lucknow',
+      hostelOrLocality: 'Matiyari',
+      bio: 'BCA coder, respectful of personal space and boundaries.',
     }
   });
 
@@ -112,10 +116,13 @@ async function main() {
     data: [
       {
         ownerId: user1.id,
-        title: 'Spacious 2BHK — 10 min from DU North Campus',
+        title: 'Spacious 2BHK — 5 min from Integral University',
         description: 'Furnished room with study desk, Wi-Fi, balcony view, and quiet surroundings. Maid comes daily for cleaning.',
-        city: 'Delhi',
-        area: 'Kamla Nagar',
+        locality: 'Kursi Road',
+        area: 'Dasauli',
+        lat: 26.9600,
+        lng: 81.0020,
+        distanceFromCampusKm: 0.25,
         monthlyRent: 8500,
         deposit: 15000,
         availableFrom: new Date(),
@@ -125,10 +132,13 @@ async function main() {
       },
       {
         ownerId: user2.id,
-        title: 'Sunny Studio Flat — Near Symbiosis Campus',
+        title: 'Sunny Studio Flat — Near Gudamba Crossing',
         description: 'Clean room with private bathroom, high-speed Wi-Fi, power backup, and 24/7 security.',
-        city: 'Pune',
-        area: 'Viman Nagar',
+        locality: 'Gudamba',
+        area: 'Tedhi Pulia Road',
+        lat: 26.9380,
+        lng: 80.9850,
+        distanceFromCampusKm: 2.75,
         monthlyRent: 9500,
         deposit: 18000,
         availableFrom: new Date(),

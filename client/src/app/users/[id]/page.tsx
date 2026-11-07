@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useParams } from 'next/navigation';
 import { apiFetch } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 
-export default function PublicProfilePage() {
+function PublicProfileContent() {
   const { id } = useParams();
   const { user } = useAuth();
   
@@ -149,5 +149,13 @@ export default function PublicProfilePage() {
 
       </div>
     </div>
+  );
+}
+
+export default function PublicProfilePage() {
+  return (
+    <Suspense fallback={<div className="p-20 text-center">Loading profile...</div>}>
+      <PublicProfileContent />
+    </Suspense>
   );
 }

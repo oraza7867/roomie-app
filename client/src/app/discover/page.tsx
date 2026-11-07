@@ -1,17 +1,22 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { apiFetch } from '@/lib/api';
+import { getMatches, sendRoomieRequest } from '@/lib/api';
 import Link from 'next/link';
+import { CAMPUS } from '@/lib/campus';
 
 interface Match {
   user: {
     id: string;
     name: string;
     college?: string;
+    course?: string;
+    year?: string;
+    hostelOrLocality?: string;
     city?: string;
     age?: number;
     bio?: string;
+    lookingFor?: 'ROOM_AND_ROOMMATE' | 'ROOMMATE_ONLY' | string;
   };
   compatibility: number;
   whyYouMatch: string[];
@@ -23,13 +28,15 @@ export default function DiscoverPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [needsPreferences, setNeedsPreferences] = useState(false);
+  const [lookingForFilter, setLookingForFilter] = useState('');
 
-  const fetchMatches = async () => {
+  const fetchMatches = async (filter?: string) => {
+    setLoading(true);
     try {
-      const matchData = await apiFetch('/matches');
+      const matchData = await getMatches(filter ? { lookingFor: filter } : undefined);
       setMatches(matchData.matches || []);
     } catch (err: any) {
-      if (err.message.includes('Living Vibe')) {
+      if (err.message && err.message.includes('Living Vibe')) {
         setNeedsPreferences(true);
       } else {
         setError(err.message);
@@ -40,15 +47,12 @@ export default function DiscoverPage() {
   };
 
   useEffect(() => {
-    fetchMatches();
-  }, []);
+    fetchMatches(lookingForFilter);
+  }, [lookingForFilter]);
 
   const handleSendRequest = async (userId: string) => {
     try {
-      await apiFetch('/requests', {
-        method: 'POST',
-        body: JSON.stringify({ receiverId: userId }),
-      });
+      await sendRoomieRequest(userId);
       // Immediately remove the user card from Discover matching list
       setMatches(prev => prev.filter(m => m.user.id !== userId));
     } catch (err: any) {
@@ -62,11 +66,11 @@ export default function DiscoverPage() {
 
   if (loading) {
     return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-        <div className="h-8 w-48 bg-gray-200 animate-pulse rounded mb-8"></div>
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10">
+        <div className="h-6 w-40 bg-[#e7e5df] rounded mb-8 animate-pulse"></div>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {[1, 2, 3].map(n => (
-            <div key={n} className="bg-white rounded-2xl border border-gray-200 h-96 animate-pulse"></div>
+            <div key={n} className="bg-[#ffffff] rounded-md border border-[#e7e5df] h-80 animate-pulse"></div>
           ))}
         </div>
       </div>
@@ -75,17 +79,18 @@ export default function DiscoverPage() {
 
   if (needsPreferences) {
     return (
-      <div className="max-w-3xl mx-auto px-4 py-20 text-center">
-        <div className="bg-orange-50 border border-orange-100 rounded-2xl p-10">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Complete your Living Vibe first</h2>
-          <p className="text-gray-600 mb-8 max-w-md mx-auto">
-            We can't find your matches until we know how you like to live! Answer a few quick questions about your habits to unlock your compatibility scores.
+      <div className="max-w-xl mx-auto px-4 py-16">
+        <div className="bg-[#ffffff] border border-[#e7e5df] rounded-md p-6 sm:p-8">
+          <div className="text-xs font-mono uppercase text-[#b4431e] font-semibold mb-2">Step required</div>
+          <h2 className="text-xl font-bold text-[#1c1917] mb-2">You haven&apos;t set your habits yet</h2>
+          <p className="text-xs sm:text-sm text-[#57534e] leading-relaxed mb-6">
+            We calculate roommate compatibility by comparing sleep routines, kitchen cleanliness, noise tolerance, and guest preferences. Without your answers, we can&apos;t rank candidates for you.
           </p>
           <Link 
             href="/preferences" 
-            className="bg-orange-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-orange-700 transition-colors"
+            className="inline-flex items-center gap-2 bg-[#b4431e] hover:bg-[#963515] text-white px-4 py-2 rounded-md text-xs font-medium border border-[#b4431e] transition-colors"
           >
-            Set up Preferences
+            Answer 6 lifestyle questions &rarr;
           </Link>
         </div>
       </div>
@@ -94,118 +99,172 @@ export default function DiscoverPage() {
 
   if (error) {
     return (
-      <div className="max-w-7xl mx-auto px-4 py-20 text-center text-red-600">
-        <p>Error loading matches: {error}</p>
+      <div className="max-w-xl mx-auto px-4 py-16">
+        <div className="bg-[#ffffff] border border-[#fecaca] rounded-md p-6 text-sm text-[#991b1b]">
+          <div className="font-bold mb-1">Could not load roommates</div>
+          <p className="text-xs text-[#7f1d1d]">{error}. Your connection might have flickered — try refreshing the page.</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 pb-24">
-      <div className="mb-8 border-b border-gray-100 pb-6 flex justify-between items-end">
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10 pb-20">
+      <div className="mb-6 border-b border-[#e7e5df] pb-6 flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-gray-900">See who actually fits your lifestyle</h1>
-          <p className="mt-2 text-sm text-gray-500 max-w-2xl">
-            Compatibility is based entirely on the lifestyle preferences you selected.
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#1c1917]">
+            Roommates at {CAMPUS.name}
+          </h1>
+          <p className="mt-1 text-xs sm:text-sm text-[#57534e]">
+            Students moving out of hostels or looking for flatmates near campus, ranked by daily habit overlap.
           </p>
         </div>
-        <span className="text-xs text-gray-500 font-medium">
-          {matches.length} potential matches
+        <span className="font-mono text-xs text-[#78716c] border border-[#e7e5df] bg-[#ffffff] px-2.5 py-1 rounded-md">
+          {matches.length} candidates
         </span>
       </div>
 
+      {/* Filter Chips */}
+      <div className="flex flex-wrap items-center gap-2 mb-6">
+        <span className="text-xs font-mono text-[#78716c] uppercase tracking-wider mr-1">
+          Filter:
+        </span>
+        {[
+          { label: 'All Roommates', value: '' },
+          { label: 'Needs Room + Roommate', value: 'ROOM_AND_ROOMMATE' },
+          { label: 'Has Room, Needs Roommate', value: 'ROOMMATE_ONLY' },
+        ].map((chip) => {
+          const isActive = lookingForFilter === chip.value;
+          return (
+            <button
+              key={chip.value}
+              onClick={() => setLookingForFilter(chip.value)}
+              className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors border ${
+                isActive
+                  ? 'bg-[#1c1917] text-white border-[#1c1917]'
+                  : 'bg-[#ffffff] border-[#e7e5df] text-[#57534e] hover:border-[#d3cfc7] hover:text-[#1c1917]'
+              }`}
+            >
+              {chip.label}
+            </button>
+          );
+        })}
+      </div>
+
       {matches.length === 0 ? (
-        <div className="text-center py-20 bg-white rounded-2xl border border-gray-100 shadow-sm">
-          <h3 className="text-lg font-medium text-gray-900">No new matches right now</h3>
-          <p className="mt-1 text-sm text-gray-500">You've connected with or reviewed all available candidates!</p>
+        <div className="bg-[#ffffff] border border-[#e7e5df] rounded-md p-10 text-center max-w-lg mx-auto">
+          <h3 className="text-sm font-bold text-[#1c1917] mb-1">No candidates match this filter right now</h3>
+          <p className="text-xs text-[#57534e] leading-relaxed mb-4">
+            Either everyone in this category is already sorted, or no new posts have been created yet.
+            Try toggling between filters or check back before semester begins.
+          </p>
+          {lookingForFilter && (
+            <button
+              onClick={() => setLookingForFilter('')}
+              className="text-xs text-[#b4431e] font-medium hover:underline"
+            >
+              Reset filter to all roommates &rarr;
+            </button>
+          )}
         </div>
       ) : (
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {matches.map((match) => (
-            <div key={match.user.id} className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden flex flex-col hover:border-gray-300 transition-colors relative group">
-              
-              {/* Dismiss / Remove Option */}
-              <button
-                onClick={() => handleRemoveFromDiscover(match.user.id)}
-                title="Dismiss candidate"
-                className="absolute top-3 right-3 text-gray-300 hover:text-gray-500 text-sm p-1 rounded-full hover:bg-gray-100 transition-colors"
-              >
-                ✕
-              </button>
-
-              <div className="p-6 flex-grow">
-                
+            <div 
+              key={match.user.id} 
+              className="bg-[#ffffff] rounded-md border border-[#e7e5df] hover:border-[#d3cfc7] transition-colors flex flex-col justify-between relative"
+            >
+              <div className="p-5">
                 {/* Header */}
-                <div className="flex justify-between items-start mb-4 pr-6">
+                <div className="flex justify-between items-start mb-2.5">
                   <div>
-                    <Link href={`/users/${match.user.id}`} className="text-xl font-bold text-gray-900 hover:text-orange-600 transition-colors">
+                    <Link 
+                      href={`/users/${match.user.id}`} 
+                      className="text-base font-bold text-[#1c1917] hover:text-[#b4431e] transition-colors"
+                    >
                       {match.user.name}
                     </Link>
-                    <p className="text-sm text-gray-500 mt-1">
-                      {match.user.college && <span>{match.user.college}</span>}
-                      {match.user.city && <span> • {match.user.city}</span>}
-                      {match.user.age && <span> • {match.user.age} yrs</span>}
+                    <p className="text-xs text-[#78716c] mt-0.5">
+                      {[
+                        match.user.course,
+                        match.user.year,
+                        match.user.hostelOrLocality || match.user.city,
+                        match.user.age ? `${match.user.age}y` : null,
+                      ].filter(Boolean).join(' · ') || match.user.college || CAMPUS.short}
                     </p>
                   </div>
-                  <div className="bg-green-50 text-green-700 font-bold px-3 py-1 rounded-lg text-sm border border-green-100">
-                    {match.compatibility}%
-                  </div>
+                  <span className="font-mono text-xs font-semibold px-2 py-0.5 rounded bg-[#faf8f5] text-[#1c1917] border border-[#e7e5df]">
+                    {match.compatibility}% match
+                  </span>
+                </div>
+
+                {/* LookingFor Badge */}
+                <div className="mb-3">
+                  {match.user.lookingFor === 'ROOMMATE_ONLY' ? (
+                    <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium border border-[#bbf7d0] bg-[#f0fdf4] text-[#166534]">
+                      Has a room · Needs roommate
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium border border-[#bfdbfe] bg-[#eff6ff] text-[#1e40af]">
+                      Needs room + roommate
+                    </span>
+                  )}
                 </div>
 
                 {/* Bio */}
                 {match.user.bio && (
-                  <p className="text-gray-700 text-sm italic mb-6">"{match.user.bio}"</p>
+                  <p className="text-xs text-[#57534e] italic mb-4 line-clamp-2">
+                    &quot;{match.user.bio}&quot;
+                  </p>
                 )}
 
                 {/* Why You Match */}
-                <div className="mb-6">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-3">Why you match</h4>
-                  <ul className="space-y-2">
+                <div className="mb-4">
+                  <div className="text-[11px] font-mono uppercase text-[#78716c] font-semibold mb-2">
+                    Agreements
+                  </div>
+                  <ul className="space-y-1.5">
                     {match.whyYouMatch.slice(0, 3).map((reason, i) => (
-                      <li key={i} className="flex items-start text-sm text-gray-700">
-                        <span className="text-green-500 mr-2 font-bold">✓</span>
-                        {reason}
+                      <li key={i} className="flex items-start text-xs text-[#57534e] gap-2">
+                        <span className="text-[#b4431e] font-bold shrink-0">•</span>
+                        <span>{reason}</span>
                       </li>
                     ))}
-                    {match.whyYouMatch.length > 3 && (
-                      <li className="text-xs text-gray-500 italic ml-5">
-                        + {match.whyYouMatch.length - 3} more
-                      </li>
-                    )}
                   </ul>
                 </div>
 
                 {/* Differences */}
                 {match.differences.length > 0 && (
                   <div>
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-3">Differences</h4>
-                    <ul className="space-y-2">
+                    <div className="text-[11px] font-mono uppercase text-[#78716c] font-semibold mb-1.5">
+                      Friction points
+                    </div>
+                    <ul className="space-y-1">
                       {match.differences.slice(0, 2).map((diff, i) => (
-                        <li key={i} className="flex items-start text-sm text-gray-700">
-                          <span className="text-orange-500 mr-2 font-bold">•</span>
-                          {diff}
+                        <li key={i} className="flex items-start text-xs text-[#78716c] gap-2">
+                          <span className="text-[#a8a29e] shrink-0">—</span>
+                          <span>{diff}</span>
                         </li>
                       ))}
                     </ul>
                   </div>
                 )}
-
               </div>
 
               {/* Actions */}
-              <div className="p-4 border-t border-gray-100 bg-gray-50 flex gap-3">
+              <div className="p-3 border-t border-[#e7e5df] bg-[#faf8f5] flex items-center justify-between gap-2">
                 <button 
                   onClick={() => handleSendRequest(match.user.id)}
-                  className="flex-1 bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded text-sm font-semibold hover:bg-gray-50 transition-colors"
+                  className="flex-1 bg-[#b4431e] hover:bg-[#963515] text-white px-3 py-1.5 rounded-md text-xs font-medium transition-colors border border-[#b4431e]"
                 >
-                  Send Request
+                  Connect
                 </button>
                 <button 
                   onClick={() => handleRemoveFromDiscover(match.user.id)}
-                  className="px-3 py-2 text-gray-400 hover:text-red-600 rounded text-sm font-medium transition-colors"
-                  title="Remove from matches"
+                  className="border border-[#e7e5df] hover:border-[#d3cfc7] bg-[#ffffff] text-[#78716c] hover:text-[#1c1917] px-2.5 py-1.5 rounded-md text-xs transition-colors"
+                  title="Pass"
                 >
-                  Remove
+                  Pass
                 </button>
               </div>
             </div>

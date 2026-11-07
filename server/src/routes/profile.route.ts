@@ -7,7 +7,9 @@ const router = Router();
 // All profile routes require authentication
 router.use(requireAuth);
 
+router.get('/', getMyProfile);
 router.get('/me', getMyProfile);
+router.patch('/', updateMyProfile);
 router.patch('/me', updateMyProfile);
 
 export default router;

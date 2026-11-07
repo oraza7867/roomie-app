@@ -19,7 +19,10 @@ export const getMyProfile = async (req: AuthRequest, res: Response, next: NextFu
         course: true,
         year: true,
         city: true,
+        hostelOrLocality: true,
         bio: true,
+        lookingFor: true,
+        vibeAnswers: true,
         createdAt: true,
         updatedAt: true
       }
@@ -55,7 +58,10 @@ export const updateMyProfile = async (req: AuthRequest, res: Response, next: Nex
         course: true,
         year: true,
         city: true,
+        hostelOrLocality: true,
         bio: true,
+        lookingFor: true,
+        vibeAnswers: true,
         createdAt: true,
         updatedAt: true
       }

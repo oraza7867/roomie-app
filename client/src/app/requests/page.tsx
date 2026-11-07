@@ -119,7 +119,7 @@ export default function RequestsPage() {
                           </span>
                         </div>
                         <p className="text-sm text-gray-500 mt-1">
-                          {[u.course, u.year, u.college, u.city].filter(Boolean).join(' • ')}
+                          {[u.course, u.year, u.hostelOrLocality || u.city, u.college].filter(Boolean).join(' • ')}
                         </p>
                       </div>
                       <span className="text-xs text-gray-400">
@@ -202,7 +202,7 @@ export default function RequestsPage() {
                           </span>
                         </div>
                         <p className="text-sm text-gray-500 mt-1">
-                          {[u.course, u.year, u.college, u.city].filter(Boolean).join(' • ')}
+                          {[u.course, u.year, u.hostelOrLocality || u.city, u.college].filter(Boolean).join(' • ')}
                         </p>
                       </div>
                       <span className="text-xs text-gray-400">

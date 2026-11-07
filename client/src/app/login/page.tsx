@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
+import { CAMPUS } from '@/lib/campus';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -41,7 +42,7 @@ export default function LoginPage() {
           Welcome back
         </h2>
         <p className="mt-2 text-sm text-gray-600">
-          Sign in to find your perfect roomie.
+          Sign in to your {CAMPUS.name} ({CAMPUS.short}) account.
         </p>
       </div>
 

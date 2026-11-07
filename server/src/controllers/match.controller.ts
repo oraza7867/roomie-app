@@ -1,4 +1,5 @@
 import { Response, NextFunction } from 'express';
+import { z } from 'zod';
 import { prisma } from '../lib/prisma';
 import { AuthRequest } from '../middleware/auth.middleware';
 import { calculateCompatibility } from '../services/matching.service';
@@ -7,6 +8,8 @@ export const getMatches = async (req: AuthRequest, res: Response, next: NextFunc
   try {
     const userId = req.user?.id;
     if (!userId) return res.status(401).json({ success: false, message: 'Not authenticated' });
+
+    const { lookingFor } = req.query;
 
     // 1. Get my own preferences
     const myPreferences = await prisma.lifestylePreference.findUnique({
@@ -39,25 +42,42 @@ export const getMatches = async (req: AuthRequest, res: Response, next: NextFunc
     });
 
     // 3. Fetch all other users who are NOT connected and have preferences set
-    const otherUsers = await prisma.user.findMany({
-      where: {
-        id: { 
-          notIn: [userId, ...Array.from(connectedUserIds)] 
-        },
-        lifestylePreference: { isNot: null }
+    const userWhere: any = {
+      id: { 
+        notIn: [userId, ...Array.from(connectedUserIds)] 
       },
+      lifestylePreference: { isNot: null }
+    };
+
+    if (lookingFor) {
+      const parsedLookingFor = z.enum(['ROOM_AND_ROOMMATE', 'ROOMMATE_ONLY']).safeParse(lookingFor);
+      if (!parsedLookingFor.success) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid lookingFor filter. Must be ROOM_AND_ROOMMATE or ROOMMATE_ONLY'
+        });
+      }
+      userWhere.lookingFor = parsedLookingFor.data;
+    }
+
+    const otherUsers = await prisma.user.findMany({
+      where: userWhere,
       select: {
         id: true,
         name: true,
         college: true,
+        course: true,
+        year: true,
         city: true,
+        hostelOrLocality: true,
         age: true,
         bio: true,
+        lookingFor: true,
         lifestylePreference: true
       }
     });
 
-    // 3. Calculate compatibility for each user
+    // 4. Calculate compatibility for each user
     const potentialMatches = otherUsers.map(otherUser => {
       // We know it's not null because of the query filter above, but TypeScript needs convincing
       const theirPreferences = otherUser.lifestylePreference!; 
@@ -69,9 +89,13 @@ export const getMatches = async (req: AuthRequest, res: Response, next: NextFunc
           id: otherUser.id,
           name: otherUser.name,
           college: otherUser.college,
+          course: otherUser.course,
+          year: otherUser.year,
           city: otherUser.city,
+          hostelOrLocality: otherUser.hostelOrLocality,
           age: otherUser.age,
-          bio: otherUser.bio
+          bio: otherUser.bio,
+          lookingFor: otherUser.lookingFor
         },
         compatibility: scoreData.compatibility,
         whyYouMatch: scoreData.whyYouMatch,
