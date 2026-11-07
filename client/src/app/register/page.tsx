@@ -4,10 +4,16 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
+import { CAMPUS } from '@/lib/campus';
 import Link from 'next/link';
 
 export default function RegisterPage() {
-  const [formData, setFormData] = useState({ name: '', email: '', password: '', college: '' });
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    password: '',
+    college: CAMPUS.name,
+  });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -22,10 +28,16 @@ export default function RegisterPage() {
     setError('');
     setLoading(true);
 
+    // TODO: Enforce @iul.ac.in email verification in production once university SSO or verification is live.
+    // For now, accepting any valid student email as a soft requirement.
+
     try {
       const data = await apiFetch('/auth/register', {
         method: 'POST',
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          college: CAMPUS.name,
+        }),
       });
 
       login(data.user);
@@ -41,15 +53,18 @@ export default function RegisterPage() {
   return (
     <div className="flex min-h-[80vh] flex-col justify-center px-6 py-12 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-sm text-center">
-        <h2 className="mt-10 text-2xl font-bold leading-9 tracking-tight text-gray-900">
+        <span className="inline-block px-3 py-1 text-xs font-semibold text-orange-700 bg-orange-50 border border-orange-200 rounded-full mb-3">
+          Only for {CAMPUS.name} students
+        </span>
+        <h2 className="text-2xl font-bold leading-9 tracking-tight text-gray-900">
           Create your account
         </h2>
         <p className="mt-2 text-sm text-gray-600">
-          Join ROOMIE and find a flatmate you actually match with.
+          Join ROOMIE to find a compatible roommate at {CAMPUS.short}.
         </p>
       </div>
 
-      <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-sm bg-white px-6 py-10 shadow-sm rounded-xl border border-gray-100">
+      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-sm bg-white px-6 py-10 shadow-sm rounded-xl border border-gray-100">
         <form className="space-y-4" onSubmit={handleSubmit}>
           {error && (
             <div className="bg-red-50 text-red-600 p-3 rounded-md text-sm border border-red-100">
@@ -72,31 +87,39 @@ export default function RegisterPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium leading-6 text-gray-900">Email address</label>
+            <label className="block text-sm font-medium leading-6 text-gray-900">
+              Email address
+            </label>
             <div className="mt-2">
               <input
                 name="email"
                 type="email"
                 required
+                placeholder="yourname@iul.ac.in"
                 className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-orange-600 sm:text-sm sm:leading-6"
                 value={formData.email}
                 onChange={handleChange}
               />
+              <p className="mt-1 text-xs text-gray-500">
+                College email preferred (e.g. @iul.ac.in)
+              </p>
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium leading-6 text-gray-900">College / University</label>
+            <label className="block text-sm font-medium leading-6 text-gray-900">
+              Campus
+            </label>
             <div className="mt-2">
               <input
-                name="college"
                 type="text"
-                required
-                className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-orange-600 sm:text-sm sm:leading-6"
-                value={formData.college}
-                onChange={handleChange}
-                placeholder="e.g. DU, VIT, Christ"
+                disabled
+                value={`${CAMPUS.name} (${CAMPUS.short})`}
+                className="block w-full rounded-md border-0 py-1.5 px-3 bg-gray-100 text-gray-700 shadow-sm ring-1 ring-inset ring-gray-200 sm:text-sm cursor-not-allowed font-medium"
               />
+              <p className="mt-1 text-xs text-gray-500">
+                Fixed — exclusively for {CAMPUS.short} students
+              </p>
             </div>
           </div>
 

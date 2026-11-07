@@ -72,6 +72,7 @@ export const getReceivedRequests = async (req: AuthRequest, res: Response, next:
             course: true,
             year: true,
             city: true,
+            hostelOrLocality: true,
             age: true,
             bio: true,
             lifestylePreference: true
@@ -105,6 +106,7 @@ export const getSentRequests = async (req: AuthRequest, res: Response, next: Nex
             course: true,
             year: true,
             city: true,
+            hostelOrLocality: true,
             age: true,
             bio: true,
             lifestylePreference: true

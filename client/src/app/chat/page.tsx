@@ -9,6 +9,8 @@ interface Connection {
   id: string;
   name: string;
   college?: string;
+  course?: string;
+  hostelOrLocality?: string;
 }
 
 interface Message {
@@ -149,9 +151,9 @@ export default function ChatPage() {
                 </div>
                 <div>
                   <h3 className="font-semibold text-gray-900 text-sm">{partner.name}</h3>
-                  {partner.college && (
-                    <p className="text-xs text-gray-500 truncate">{partner.college}</p>
-                  )}
+                  <p className="text-xs text-gray-500 truncate">
+                    {[partner.course, partner.hostelOrLocality, partner.college].filter(Boolean).join(' • ')}
+                  </p>
                 </div>
               </button>
             ))}

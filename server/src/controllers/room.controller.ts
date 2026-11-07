@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { prisma } from '../lib/prisma';
 import { AuthRequest } from '../middleware/auth.middleware';
 import { createRoomSchema, updateRoomSchema } from '../validators/room.validator';
+import { calculateDistanceFromCampus } from '../utils/distance';
 
 // ======================= CREATE =======================
 export const createRoom = async (req: AuthRequest, res: Response, next: NextFunction) => {
@@ -11,11 +12,26 @@ export const createRoom = async (req: AuthRequest, res: Response, next: NextFunc
 
     const validatedData = createRoomSchema.parse(req.body);
 
+    const distanceFromCampusKm = calculateDistanceFromCampus(validatedData.lat, validatedData.lng);
+
+    // Convert date string → Date object (works for both "2026-11-01" and full ISO)
+    const availableFrom = new Date(validatedData.availableFrom);
+    if (isNaN(availableFrom.getTime())) {
+      return res.status(400).json({ success: false, message: 'Invalid availableFrom date' });
+    }
+
+    const roomData: any = {
+      ...validatedData,
+      availableFrom,
+      distanceFromCampusKm,
+      ownerId: userId,
+    };
+    if (roomData.preferredGender === undefined) {
+      delete roomData.preferredGender;
+    }
+
     const room = await prisma.roomListing.create({
-      data: {
-        ...validatedData,
-        ownerId: userId,
-      }
+      data: roomData
     });
 
     res.status(201).json({ success: true, message: 'Room listing created', room });
@@ -27,19 +43,26 @@ export const createRoom = async (req: AuthRequest, res: Response, next: NextFunc
   }
 };
 
+
 // ======================= READ (ALL) =======================
 export const getRooms = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { city, area, maxRent, roomType, furnished, status } = req.query;
+    const { locality, city, area, maxRent, roomType, furnished, status, maxDistanceKm } = req.query;
 
     // Build the query filters dynamically
     const filters: any = {};
 
-    if (city) filters.city = { equals: city as string, mode: 'insensitive' };
+    const targetLocality = (locality || city) as string | undefined;
+    if (targetLocality) filters.locality = { equals: targetLocality, mode: 'insensitive' };
     if (area) filters.area = { contains: area as string, mode: 'insensitive' };
-    if (maxRent) filters.monthlyRent = { lte: parseInt(maxRent as string) };
+    if (maxRent && !isNaN(Number(maxRent))) {
+      filters.monthlyRent = { lte: parseInt(maxRent as string, 10) };
+    }
     if (roomType) filters.roomType = roomType;
     if (furnished) filters.furnished = furnished;
+    if (maxDistanceKm && !isNaN(Number(maxDistanceKm))) {
+      filters.distanceFromCampusKm = { lte: parseFloat(maxDistanceKm as string) };
+    }
     
     // By default, only show available rooms unless a specific status is asked for
     if (status) {
@@ -50,7 +73,7 @@ export const getRooms = async (req: Request, res: Response, next: NextFunction) 
 
     const rooms = await prisma.roomListing.findMany({
       where: filters,
-      orderBy: { createdAt: 'desc' },
+      orderBy: { distanceFromCampusKm: 'asc' },
       include: {
         owner: {
           select: { id: true, name: true, college: true, age: true }
@@ -70,7 +93,7 @@ export const getRoomById = async (req: Request, res: Response, next: NextFunctio
     const { id } = req.params;
 
     const room = await prisma.roomListing.findUnique({
-      where: { id },
+      where: { id: id as string },
       include: {
         owner: {
           select: { id: true, name: true, college: true, bio: true, age: true }
@@ -95,7 +118,7 @@ export const updateRoom = async (req: AuthRequest, res: Response, next: NextFunc
     if (!userId) return res.status(401).json({ success: false, message: 'Not authenticated' });
 
     // 1. Check if room exists and if the user is the owner
-    const existingRoom = await prisma.roomListing.findUnique({ where: { id } });
+    const existingRoom = await prisma.roomListing.findUnique({ where: { id: id as string } });
     if (!existingRoom) return res.status(404).json({ success: false, message: 'Room not found' });
     
     if (existingRoom.ownerId !== userId) {
@@ -105,10 +128,18 @@ export const updateRoom = async (req: AuthRequest, res: Response, next: NextFunc
     // 2. Validate incoming data
     const validatedData = updateRoomSchema.parse(req.body);
 
-    // 3. Update the database
+    // 3. Recalculate distance if lat/lng updated
+    const dataToUpdate: any = { ...validatedData };
+    if (validatedData.lat !== undefined || validatedData.lng !== undefined) {
+      const newLat = validatedData.lat ?? existingRoom.lat;
+      const newLng = validatedData.lng ?? existingRoom.lng;
+      dataToUpdate.distanceFromCampusKm = calculateDistanceFromCampus(newLat, newLng);
+    }
+
+    // 4. Update the database
     const updatedRoom = await prisma.roomListing.update({
-      where: { id },
-      data: validatedData
+      where: { id: id as string },
+      data: dataToUpdate
     });
 
     res.status(200).json({ success: true, message: 'Room updated', room: updatedRoom });
@@ -129,7 +160,7 @@ export const deleteRoom = async (req: AuthRequest, res: Response, next: NextFunc
     if (!userId) return res.status(401).json({ success: false, message: 'Not authenticated' });
 
     // 1. Check ownership
-    const existingRoom = await prisma.roomListing.findUnique({ where: { id } });
+    const existingRoom = await prisma.roomListing.findUnique({ where: { id: id as string } });
     if (!existingRoom) return res.status(404).json({ success: false, message: 'Room not found' });
     
     if (existingRoom.ownerId !== userId) {
@@ -137,7 +168,7 @@ export const deleteRoom = async (req: AuthRequest, res: Response, next: NextFunc
     }
 
     // 2. Delete from database
-    await prisma.roomListing.delete({ where: { id } });
+    await prisma.roomListing.delete({ where: { id: id as string } });
 
     res.status(200).json({ success: true, message: 'Room deleted successfully' });
   } catch (error) {
